@@ -205,7 +205,8 @@ See `2048-undoable-random'."
   (and (>= x 0) (< x 4) (>= y 0) (< y 4)))
 
 (defun 2048-fall (dx dy)
-  "The main algorithm implementing one step/move."
+  "The main algorithm implementing one step/move.
+Returns whether the board state changed or not."
   (interactive)
   (2048-ensure-random-queue 2)
   (2048-backup-board)
@@ -231,8 +232,10 @@ See `2048-undoable-random'."
                     (setq moved t))
                 (2048-set-cell-at x2 y2 n)
                 (setq moved (or moved (not (= x x2)) (not (= y y2))))))))))
-    (when moved (2048-random-drop))
-    (2048-update-all-screen-cells)))
+    (when moved
+      (2048-random-drop)
+      (2048-update-all-screen-cells)
+      t)))
 
 (defun 2048-backup-board ()
   "Make a copy for undo."
@@ -256,6 +259,7 @@ See `2048-undoable-random'."
     (define-key map [left] '2048-cmd-left)
     (define-key map [down] '2048-cmd-down)
     (define-key map [up] '2048-cmd-up)
+    (define-key map "!" '2048-whoosh)
     (define-key map "s" '2048-start)
     (define-key map "S" '2048-start-server)
     (define-key map "r" '2048-redisplay)
@@ -279,6 +283,11 @@ See `2048-undoable-random'."
   (setq 2048-score 2048-previous-score)
   (setq 2048-random-queue 2048-previous-random-queue)
   (2048-update-all-screen-cells))
+
+(defun 2048-whoosh ()
+  "Play alternatigly down, right until the board no longer changes."
+  (interactive)
+  (while (or (2048-cmd-down) (2048-cmd-right))))
 
 (defface 2048-face-2
   '((t (:foreground "black" :weight bold :background "gray95")))
